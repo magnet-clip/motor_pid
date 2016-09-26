@@ -20,11 +20,17 @@
 
 #define WHEEL_STOP_THRESHOLD 1000
 #define ENCODER_LINES 8
-#define AVG_NUM 50
-#define ALPHA ((2.0/(AVG_NUM+1)))
+#define ENCODER_AVG_PERIOD 20
+#define ENCODER_ALPHA ((2.0/(ENCODER_AVG_PERIOD+1)))
 
-int speed, angle;
+#define SPEED_AVG_PERIOD 10
+#define SPEED_ALPHA ((2.0/(SPEED_AVG_PERIOD+1)))
+
+double currentSpeed, lastSpeed;
+
+int angle;
 int enc1, enc2;
+
 unsigned long lastChangeTime1 = 0, lastChangeTime2 = 0;
 double rpm1, rpm2;
 
@@ -32,11 +38,13 @@ double lastRealRpm1 = 0, lastRealRpm2 = 0;
 double realRpm1, realRpm2;
 
 void readSpeedAndAngle() {
-	speed = constrain(map(analogRead(SPEED_PIN), 24, 1021, 0, 255), 0, 255);
-	//delay(1);
+	lastSpeed = currentSpeed;
+	double dSpeed = (double)analogRead(SPEED_PIN);
+	currentSpeed = SPEED_ALPHA*dSpeed + (1-SPEED_ALPHA)*lastSpeed;
+	
 	angle = constrain(map(analogRead(ANGLE_PIN),  0, 1023, 0, 255), 0, 255);
-	//delay(1);
 
+	int speed = map((int)currentSpeed, 0, 1023, 0, 255);
 	analogWrite(M1_PWM_PIN, speed);
 	analogWrite(M2_PWM_PIN, speed);
 }
@@ -57,7 +65,7 @@ void checkEncoders() {
 		}
 		lastChangeTime1 = t;
 		digitalWrite(LED1_PIN, new_enc1);
-		realRpm1 = rpm1*ALPHA + lastRealRpm1*(1-ALPHA);
+		realRpm1 = rpm1*ENCODER_ALPHA + lastRealRpm1*(1-ENCODER_ALPHA);
 	} else if (dt1 > WHEEL_STOP_THRESHOLD) {
 		rpm1 = 0;
 		lastRealRpm1 = 0;
@@ -73,7 +81,7 @@ void checkEncoders() {
 		}
 		lastChangeTime2 = t;
 		digitalWrite(LED2_PIN, new_enc2);
-		realRpm2 = rpm2*ALPHA + lastRealRpm2*(1-ALPHA);
+		realRpm2 = rpm2*ENCODER_ALPHA + lastRealRpm2*(1-ENCODER_ALPHA);
 	} else if (dt2 > WHEEL_STOP_THRESHOLD) {
 		rpm2 = 0;
 		lastRealRpm2 = 0;
@@ -120,6 +128,24 @@ void setup() {
 #define CHECK_ENCODERS 10
 
 int stepNum = 0;
+
+/*
+	Issues with this code:	
+		3) Can't read current
+		
+		1) Tasks better be based on millis() instead of step counter
+		
+		2) Could rewrite it OOP way with abstract base class Task. In this case I could monitor CPU idle time so that to make sure it has resources
+		
+		6) Check if current averaging of RPMs is not too smooth
+		
+		7) Implementing PID controller 
+			a) Create a function which maps pot angle to desired RPMs
+			b) Check if system is controllable and observable
+			c) Think of case when desired RPM (goal) is not reachable 
+				- how to detect it (current?)
+				- what to do (change a goal?)
+*/
 
 
 void loop() {
