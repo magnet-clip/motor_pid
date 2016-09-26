@@ -37,16 +37,19 @@ double rpm1, rpm2;
 double lastRealRpm1 = 0, lastRealRpm2 = 0;
 double realRpm1, realRpm2;
 
+void setPidSpeed(int speed) {
+	int s = map(speed, 0, 1023, 0, 255);
+	analogWrite(M1_PWM_PIN, s);
+	analogWrite(M2_PWM_PIN, s);	
+}
+
 void readSpeedAndAngle() {
 	lastSpeed = currentSpeed;
 	double dSpeed = (double)analogRead(SPEED_PIN);
 	currentSpeed = SPEED_ALPHA*dSpeed + (1-SPEED_ALPHA)*lastSpeed;
 	
 	angle = constrain(map(analogRead(ANGLE_PIN),  0, 1023, 0, 255), 0, 255);
-
-	int speed = map((int)currentSpeed, 0, 1023, 0, 255);
-	analogWrite(M1_PWM_PIN, speed);
-	analogWrite(M2_PWM_PIN, speed);
+	setPidSpeed((int)currentSpeed);
 }
 
 void checkEncoders() {
