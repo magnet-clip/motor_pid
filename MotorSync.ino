@@ -26,20 +26,13 @@
 #define SPEED_AVG_PERIOD 10
 #define SPEED_ALPHA ((2.0/(SPEED_AVG_PERIOD+1)))
 
-double desiredSpeed, lastSpeed;
-
 int angle;
-int enc1, enc2;
-
-int speedPwmDutyCycle;
-
-unsigned long lastChangeTime1 = 0, lastChangeTime2 = 0;
-double rpm1, rpm2;
-
-double lastRealRpm1 = 0, lastRealRpm2 = 0;
 double realRpm1, realRpm2;
 
 void readSpeedAndAngle() {
+	static int speedPwmDutyCycle;
+	static double desiredSpeed, lastSpeed;
+
 	lastSpeed = desiredSpeed;
 	double potSpeed = (double)analogRead(SPEED_PIN);
 	desiredSpeed = SPEED_ALPHA*potSpeed + (1-SPEED_ALPHA)*lastSpeed;
@@ -52,6 +45,11 @@ void readSpeedAndAngle() {
 }
 
 void checkEncoders() {
+	static unsigned long lastChangeTime1 = 0, lastChangeTime2 = 0;
+	static int enc1, enc2;	
+	static double rpm1, rpm2;
+	static double lastRealRpm1 = 0, lastRealRpm2 = 0;
+
 	unsigned long t = millis();
 	
 	unsigned long dt1 = t - lastChangeTime1;
@@ -130,25 +128,6 @@ void setup() {
 #define CHECK_ENCODERS 10
 
 int stepNum = 0;
-
-/*
-	Issues with this code:	
-		3) Can't read current
-		
-		1) Tasks better be based on millis() instead of step counter
-		
-		2) Could rewrite it OOP way with abstract base class Task. In this case I could monitor CPU idle time so that to make sure it has resources
-		
-		6) Check if current averaging of RPMs is not too smooth
-		
-		7) Implementing PID controller 
-			a) Create a function which maps pot angle to desired RPMs
-			b) Check if system is controllable and observable
-			c) Think of case when desired RPM (goal) is not reachable 
-				- how to detect it (current?)
-				- what to do (change a goal?)
-*/
-
 
 void loop() {
 	stepNum++;
