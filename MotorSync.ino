@@ -26,10 +26,12 @@
 #define SPEED_AVG_PERIOD 10
 #define SPEED_ALPHA ((2.0/(SPEED_AVG_PERIOD+1)))
 
-double currentSpeed, lastSpeed;
+double desiredSpeed, lastSpeed;
 
 int angle;
 int enc1, enc2;
+
+int speedPwmDutyCycle;
 
 unsigned long lastChangeTime1 = 0, lastChangeTime2 = 0;
 double rpm1, rpm2;
@@ -37,19 +39,16 @@ double rpm1, rpm2;
 double lastRealRpm1 = 0, lastRealRpm2 = 0;
 double realRpm1, realRpm2;
 
-void setPidSpeed(int speed) {
-	int s = map(speed, 0, 1023, 0, 255);
-	analogWrite(M1_PWM_PIN, s);
-	analogWrite(M2_PWM_PIN, s);	
-}
-
 void readSpeedAndAngle() {
-	lastSpeed = currentSpeed;
-	double dSpeed = (double)analogRead(SPEED_PIN);
-	currentSpeed = SPEED_ALPHA*dSpeed + (1-SPEED_ALPHA)*lastSpeed;
+	lastSpeed = desiredSpeed;
+	double potSpeed = (double)analogRead(SPEED_PIN);
+	desiredSpeed = SPEED_ALPHA*potSpeed + (1-SPEED_ALPHA)*lastSpeed;
 	
 	angle = constrain(map(analogRead(ANGLE_PIN),  0, 1023, 0, 255), 0, 255);
-	setPidSpeed((int)currentSpeed);
+
+	speedPwmDutyCycle = map((int)desiredSpeed, 0, 1023, 0, 255);
+	analogWrite(M1_PWM_PIN, speedPwmDutyCycle);
+	analogWrite(M2_PWM_PIN, speedPwmDutyCycle);
 }
 
 void checkEncoders() {
