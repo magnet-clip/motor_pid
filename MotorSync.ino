@@ -29,7 +29,112 @@
 int angle;
 double realRpm1, realRpm2;
 
+double error1, error2;
+
+#define KP 0.1
+#define KI 0
+
+double pid1(double desiredRpm, double actualRpm) {
+	static double errorIntegral = 0.0;
+	
+	error1 = desiredRpm - actualRpm;
+	errorIntegral += error1;
+
+	return KP*error1 + KI*errorIntegral;
+}
+
+double pid2(double desiredRpm, double actualRpm) {
+	static double errorIntegral = 0.0;
+	
+	error2 = desiredRpm - actualRpm;
+	errorIntegral += error2;
+
+	return KP*error2 + KI*errorIntegral;
+}
+
 void readSpeedAndAngle() {
+	static double desiredPotSpeed, lastPotSpeed;
+	static int speedPwmDutyCycle1 = 0, speedPwmDutyCycle2 = 0;
+
+	lastPotSpeed = desiredPotSpeed;
+	double potSpeed = (double)analogRead(SPEED_PIN);
+	desiredPotSpeed = SPEED_ALPHA*potSpeed + (1-SPEED_ALPHA)*lastPotSpeed;
+	
+	double desiredRpm = desiredPotSpeed / 10.24; // desiredPotSpeed is between 0 and 1024, and max rpm is 100
+	desiredRpm = desiredRpm > 100 ? 100: desiredRpm; // for any occasion
+	
+	Serial.print("Actual 1/2 & desired RPM: ");
+	Serial.print(realRpm1);
+	Serial.print("/");
+	Serial.print(realRpm2);
+	Serial.print(" & ");
+	Serial.println(desiredRpm);
+	
+	double p1 = pid1(desiredRpm, realRpm1); // delta in rpms
+	double p2 = pid2(desiredRpm, realRpm2);
+	
+	Serial.print("PIDs: ");
+	Serial.print(p1);
+	Serial.print(" ");
+	Serial.println(p2);
+	
+	double p1Abs = p1 < 0 ? -p1 : p1;
+	double p2Abs = p2 < 0 ? -p2 : p2;
+	
+	double p1AbsConstrained = constrain(p1Abs, 0, 100);
+	double p2AbsConstrained = constrain(p2Abs, 0, 100);
+	
+	double thePid1 = map(p1AbsConstrained, 0, 100, 0, 255);
+	double thePid2 = map(p2AbsConstrained, 0, 100, 0, 255);
+	
+	Serial.print("PIDs adjusted: ");
+	Serial.print(thePid1);
+	Serial.print(" ");
+	Serial.println(thePid2);
+
+	int direction1 = p1 < 0 ? -1 : 1;
+	int direction2 = p2 < 0 ? -1 : 1;
+	
+	Serial.print("Directions: ");
+	Serial.print(direction1);
+	Serial.print(" ");
+	Serial.println(direction2);
+	
+	speedPwmDutyCycle1 += thePid1; // PID1 and PID2 are in RPM scale!
+	speedPwmDutyCycle2 += thePid2; // And logic must be quite simple
+
+	if (direction1 > 0) {
+		digitalWrite(M1_PIN1, HIGH);
+		digitalWrite(M1_PIN2, LOW);
+	} else {
+		digitalWrite(M1_PIN1, LOW);
+		digitalWrite(M1_PIN2, HIGH);		
+	}
+
+	if (direction2 > 0) {
+		digitalWrite(M2_PIN1, HIGH);
+		digitalWrite(M2_PIN2, LOW);
+	} else {
+		digitalWrite(M2_PIN1, LOW);
+		digitalWrite(M2_PIN2, HIGH);
+	}
+	
+	Serial.print("PWMs: ");
+	Serial.print(speedPwmDutyCycle1);
+	Serial.print(" ");
+	Serial.println(speedPwmDutyCycle2);
+
+	analogWrite(M1_PWM_PIN, constrain(speedPwmDutyCycle1, 0, 255));
+	analogWrite(M2_PWM_PIN, constrain(speedPwmDutyCycle2, 0, 255));
+	
+	Serial.println("--------------");
+
+
+	angle = constrain(map(analogRead(ANGLE_PIN),  0, 1023, 0, 255), 0, 255);
+}
+
+
+void readSpeedAndAngleOld() {
 	static int speedPwmDutyCycle;
 	static double desiredSpeed, lastSpeed;
 
@@ -124,7 +229,7 @@ void setup() {
 #define RESET_PERIOD 30000
 
 #define REPORT_PERIOD 20000
-#define READ_PERIOD 100
+#define READ_PERIOD 1000
 #define CHECK_ENCODERS 10
 
 int stepNum = 0;
@@ -141,6 +246,10 @@ void loop() {
 		Serial.print(analogRead(M1_CURR_PIN));
 		Serial.print(" ");
 		Serial.println(analogRead(M2_CURR_PIN));
+		Serial.print("Errors: ");
+		Serial.print(error1);
+		Serial.print(" ");
+		Serial.println(error2);
 	}
 	
 	if (stepNum % READ_PERIOD == 0) {
