@@ -26,14 +26,23 @@
 #define SPEED_AVG_PERIOD 10
 #define SPEED_ALPHA ((2.0/(SPEED_AVG_PERIOD+1)))
 
-int angle;
-double smoothedRpm1, smoothedRpm2;
-double realRpm1, realRpm2;
+volatile int angle;
+volatile double smoothedRpm1, smoothedRpm2;
+volatile double realRpm1, realRpm2;
 
-double error1, error2;
+volatile double error1, error2;
+volatile int stepNum = 0;
 
-#define KP 0.1
-#define KI 0
+#define RESET_PERIOD 30000
+
+#define REPORT_PERIOD 20000
+#define READ_PERIOD 1000
+#define CHECK_ENCODERS 1
+
+#define KP 0.075
+#define KI 0.0
+
+#define DEBUG_PID
 
 double pid1(double desiredRpm, double actualRpm) {
 	static double errorIntegral = 0.0;
@@ -64,26 +73,8 @@ void readSpeedAndAngle() {
 	double desiredRpm = desiredPotSpeed / 10.24; // desiredPotSpeed is between 0 and 1024, and max rpm is 100
 	desiredRpm = desiredRpm > 100 ? 100: desiredRpm; // for any occasion
 	
-	Serial.print("Not smoothed actual 1/2 RPM: ");
-	Serial.print(realRpm1);
-	Serial.print("/");
-	Serial.println(realRpm2);
-	
-	
-	Serial.print("Smoothed actual1/2 & desired RPM: ");
-	Serial.print(smoothedRpm1);
-	Serial.print("/");
-	Serial.print(smoothedRpm2);
-	Serial.print(" & ");
-	Serial.println(desiredRpm);
-	
 	double p1 = pid1(desiredRpm, smoothedRpm1); // delta in rpms
 	double p2 = pid2(desiredRpm, smoothedRpm2);
-	
-	Serial.print("PIDs: ");
-	Serial.print(p1);
-	Serial.print(" ");
-	Serial.println(p2);
 	
 	double p1Abs = p1 < 0 ? -p1 : p1;
 	double p2Abs = p2 < 0 ? -p2 : p2;
@@ -93,11 +84,6 @@ void readSpeedAndAngle() {
 	
 	double thePid1 = map(p1AbsConstrained, 0, 100, 0, 255);
 	double thePid2 = map(p2AbsConstrained, 0, 100, 0, 255);
-	
-	Serial.print("PIDs adjusted: ");
-	Serial.print(thePid1);
-	Serial.print(" ");
-	Serial.println(thePid2);
 
 	int direction1 = p1 < 0 ? -1 : 1;
 	int direction2 = p2 < 0 ? -1 : 1;
@@ -115,16 +101,54 @@ void readSpeedAndAngle() {
 		speedPwmDutyCycle2 -= thePid2;
 	}
 	
+	int m1Signal = constrain(speedPwmDutyCycle1, 0, 255);
+	int m2Signal = constrain(speedPwmDutyCycle2, 0, 255);
+
+	analogWrite(M1_PWM_PIN, m1Signal);
+	analogWrite(M2_PWM_PIN, m2Signal);
+	
+	
+	#ifdef DEBUG_PID
+	Serial.print("Not smoothed actual 1/2 RPM: ");
+	Serial.print(realRpm1);
+	Serial.print("/");
+	Serial.println(realRpm2);
+		
+		
+	Serial.print("Smoothed actual 1/2 & desired RPM: ");
+	Serial.print(smoothedRpm1);
+	Serial.print("/");
+	Serial.print(smoothedRpm2);
+	Serial.print(" & ");
+	Serial.println(desiredRpm);
+		
+	Serial.print("PIDs: ");
+	Serial.print(p1);
+	Serial.print(" ");
+	Serial.println(p2);
+		
+	Serial.print("PIDs adjusted: ");
+	Serial.print(thePid1);
+	Serial.print(" ");
+	Serial.println(thePid2);
+		
 	Serial.print("PWMs: ");
 	Serial.print(speedPwmDutyCycle1);
 	Serial.print(" ");
-	Serial.println(speedPwmDutyCycle2);
-
-	analogWrite(M1_PWM_PIN, constrain(speedPwmDutyCycle1, 0, 255));
-	analogWrite(M2_PWM_PIN, constrain(speedPwmDutyCycle2, 0, 255));
+	Serial.println(speedPwmDutyCycle2);		
 	
-	Serial.println("--------------");
+		
+	Serial.print("Signals: ");
+	Serial.print(m1Signal);
+	Serial.print(" ");
+	Serial.println(m2Signal);
+	
 
+	Serial.println("--------------");
+	#endif
+
+	speedPwmDutyCycle1 = m1Signal;
+	speedPwmDutyCycle2 = m2Signal;
 
 	angle = constrain(map(analogRead(ANGLE_PIN),  0, 1023, 0, 255), 0, 255);
 }
@@ -155,6 +179,8 @@ void checkEncoders() {
 	
 	unsigned long dt1 = t - lastChangeTime1;
 	unsigned long dt2 = t - lastChangeTime2;
+	
+	if (dt1 == 0 || dt2 == 0) return;
 	
 	lastRealRpm1 = smoothedRpm1;
 	lastRealRpm2 = smoothedRpm2;
@@ -219,21 +245,17 @@ void setup() {
 	
 	
 	Serial.begin(57600);
-	Serial.print("===============");
+	#ifdef DEBUG_PID
+	Serial.println("===============");
+	#endif
 }
 
 
-#define RESET_PERIOD 30000
-
-#define REPORT_PERIOD 20000
-#define READ_PERIOD 1000
-#define CHECK_ENCODERS 10
-
-int stepNum = 0;
 
 void loop() {
 	stepNum++;
 	
+	#ifdef DEBUG_PID
 	if (stepNum % REPORT_PERIOD == 0) {
 		Serial.print("RPM: ");
 		Serial.print(smoothedRpm1);
@@ -248,6 +270,7 @@ void loop() {
 		Serial.print(" ");
 		Serial.println(error2);
 	}
+	#endif
 	
 	if (stepNum % READ_PERIOD == 0) {
 		readSpeedAndAngle();
