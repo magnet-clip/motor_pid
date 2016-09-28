@@ -27,6 +27,7 @@
 #define SPEED_ALPHA ((2.0/(SPEED_AVG_PERIOD+1)))
 
 int angle;
+double smoothedRpm1, smoothedRpm2;
 double realRpm1, realRpm2;
 
 double error1, error2;
@@ -63,15 +64,21 @@ void readSpeedAndAngle() {
 	double desiredRpm = desiredPotSpeed / 10.24; // desiredPotSpeed is between 0 and 1024, and max rpm is 100
 	desiredRpm = desiredRpm > 100 ? 100: desiredRpm; // for any occasion
 	
-	Serial.print("Actual 1/2 & desired RPM: ");
+	Serial.print("Not smoothed actual 1/2 RPM: ");
 	Serial.print(realRpm1);
 	Serial.print("/");
-	Serial.print(realRpm2);
+	Serial.println(realRpm2);
+	
+	
+	Serial.print("Smoothed actual1/2 & desired RPM: ");
+	Serial.print(smoothedRpm1);
+	Serial.print("/");
+	Serial.print(smoothedRpm2);
 	Serial.print(" & ");
 	Serial.println(desiredRpm);
 	
-	double p1 = pid1(desiredRpm, realRpm1); // delta in rpms
-	double p2 = pid2(desiredRpm, realRpm2);
+	double p1 = pid1(desiredRpm, smoothedRpm1); // delta in rpms
+	double p2 = pid2(desiredRpm, smoothedRpm2);
 	
 	Serial.print("PIDs: ");
 	Serial.print(p1);
@@ -141,7 +148,7 @@ void readSpeedAndAngleOld() {
 void checkEncoders() {
 	static unsigned long lastChangeTime1 = 0, lastChangeTime2 = 0;
 	static int enc1, enc2;	
-	static double rpm1, rpm2;
+	//static double rpm1, rpm2;
 	static double lastRealRpm1 = 0, lastRealRpm2 = 0;
 
 	unsigned long t = millis();
@@ -149,21 +156,21 @@ void checkEncoders() {
 	unsigned long dt1 = t - lastChangeTime1;
 	unsigned long dt2 = t - lastChangeTime2;
 	
-	lastRealRpm1 = realRpm1;
-	lastRealRpm2 = realRpm2;
+	lastRealRpm1 = smoothedRpm1;
+	lastRealRpm2 = smoothedRpm2;
 	
 	int new_enc1 = digitalRead(ENC_1_PIN);
 	if (new_enc1 != enc1) {
 		if (lastChangeTime1 > 0) {
-			rpm1 = 30000.0/(dt1*ENCODER_LINES);
+			realRpm1 = 30000.0/(dt1*ENCODER_LINES);
 		}
 		lastChangeTime1 = t;
 		digitalWrite(LED1_PIN, new_enc1);
-		realRpm1 = rpm1*ENCODER_ALPHA + lastRealRpm1*(1-ENCODER_ALPHA);
+		smoothedRpm1 = realRpm1*ENCODER_ALPHA + lastRealRpm1*(1-ENCODER_ALPHA);
 	} else if (dt1 > WHEEL_STOP_THRESHOLD) {
-		rpm1 = 0;
-		lastRealRpm1 = 0;
 		realRpm1 = 0;
+		lastRealRpm1 = 0;
+		smoothedRpm1 = 0;
 		lastChangeTime1 = 0;
 	}	
 	enc1 = new_enc1;
@@ -171,15 +178,15 @@ void checkEncoders() {
 	int new_enc2 = digitalRead(ENC_2_PIN);
 	if (new_enc2 != enc2) {
 		if (lastChangeTime2 > 0) {
-			rpm2 = 30000.0/(dt2*ENCODER_LINES);
+			realRpm2 = 30000.0/(dt2*ENCODER_LINES);
 		}
 		lastChangeTime2 = t;
 		digitalWrite(LED2_PIN, new_enc2);
-		realRpm2 = rpm2*ENCODER_ALPHA + lastRealRpm2*(1-ENCODER_ALPHA);
+		smoothedRpm2 = realRpm2*ENCODER_ALPHA + lastRealRpm2*(1-ENCODER_ALPHA);
 	} else if (dt2 > WHEEL_STOP_THRESHOLD) {
-		rpm2 = 0;
-		lastRealRpm2 = 0;
 		realRpm2 = 0;
+		lastRealRpm2 = 0;
+		smoothedRpm2 = 0;
 		lastChangeTime2 = 0;
 	}
 	enc2 = new_enc2;
@@ -229,9 +236,9 @@ void loop() {
 	
 	if (stepNum % REPORT_PERIOD == 0) {
 		Serial.print("RPM: ");
-		Serial.print(realRpm1);
+		Serial.print(smoothedRpm1);
 		Serial.print(" ");
-		Serial.println(realRpm2);
+		Serial.println(smoothedRpm2);
 		Serial.print("Current current: ");
 		Serial.print(analogRead(M1_CURR_PIN));
 		Serial.print(" ");
