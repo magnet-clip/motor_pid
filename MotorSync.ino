@@ -95,28 +95,17 @@ void readSpeedAndAngle() {
 	int direction1 = p1 < 0 ? -1 : 1;
 	int direction2 = p2 < 0 ? -1 : 1;
 	
-	Serial.print("Directions: ");
-	Serial.print(direction1);
-	Serial.print(" ");
-	Serial.println(direction2);
-	
-	speedPwmDutyCycle1 += thePid1; // PID1 and PID2 are in RPM scale!
-	speedPwmDutyCycle2 += thePid2; // And logic must be quite simple
 
 	if (direction1 > 0) {
-		digitalWrite(M1_PIN1, HIGH);
-		digitalWrite(M1_PIN2, LOW);
+		speedPwmDutyCycle1 += thePid1;
 	} else {
-		digitalWrite(M1_PIN1, LOW);
-		digitalWrite(M1_PIN2, HIGH);		
+		speedPwmDutyCycle1 -= thePid1; 
 	}
 
 	if (direction2 > 0) {
-		digitalWrite(M2_PIN1, HIGH);
-		digitalWrite(M2_PIN2, LOW);
+		speedPwmDutyCycle2 += thePid2;
 	} else {
-		digitalWrite(M2_PIN1, LOW);
-		digitalWrite(M2_PIN2, HIGH);
+		speedPwmDutyCycle2 -= thePid2;
 	}
 	
 	Serial.print("PWMs: ");
@@ -223,6 +212,7 @@ void setup() {
 	
 	
 	Serial.begin(57600);
+	Serial.print("===============");
 }
 
 
