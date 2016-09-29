@@ -33,16 +33,22 @@ volatile double realRpm1, realRpm2;
 volatile double error1, error2;
 volatile int stepNum = 0;
 
+volatile double desiredPotSpeed;
+volatile int speedPwmDutyCycle1 = 0, speedPwmDutyCycle2 = 0;
+
 #define RESET_PERIOD 30000
 
 #define REPORT_PERIOD 20000
-#define READ_PERIOD 1000
-#define CHECK_ENCODERS 1
+
+// does not make sense - encoders get updated only several times per second, while pot get updated continuously!
+#define READ_PERIOD 100
+#define CHECK_ENCODERS 100
+#define UPDATE_WHEELS 1000
 
 #define KP 0.075
 #define KI 0.0
 
-#define DEBUG_PID
+//#define DEBUG_PID
 
 double pid1(double desiredRpm, double actualRpm) {
 	static double errorIntegral = 0.0;
@@ -63,51 +69,51 @@ double pid2(double desiredRpm, double actualRpm) {
 }
 
 void readSpeedAndAngle() {
-	static double desiredPotSpeed, lastPotSpeed;
-	static int speedPwmDutyCycle1 = 0, speedPwmDutyCycle2 = 0;
+	static double lastPotSpeed;
 
 	lastPotSpeed = desiredPotSpeed;
 	double potSpeed = (double)analogRead(SPEED_PIN);
 	desiredPotSpeed = SPEED_ALPHA*potSpeed + (1-SPEED_ALPHA)*lastPotSpeed;
-	
+}
+
+void updateWheels() {
 	double desiredRpm = desiredPotSpeed / 10.24; // desiredPotSpeed is between 0 and 1024, and max rpm is 100
 	desiredRpm = desiredRpm > 100 ? 100: desiredRpm; // for any occasion
-	
+		
 	double p1 = pid1(desiredRpm, smoothedRpm1); // delta in rpms
 	double p2 = pid2(desiredRpm, smoothedRpm2);
-	
+		
 	double p1Abs = p1 < 0 ? -p1 : p1;
 	double p2Abs = p2 < 0 ? -p2 : p2;
-	
+		
 	double p1AbsConstrained = constrain(p1Abs, 0, 100);
 	double p2AbsConstrained = constrain(p2Abs, 0, 100);
-	
+		
 	double thePid1 = map(p1AbsConstrained, 0, 100, 0, 255);
 	double thePid2 = map(p2AbsConstrained, 0, 100, 0, 255);
 
 	int direction1 = p1 < 0 ? -1 : 1;
 	int direction2 = p2 < 0 ? -1 : 1;
-	
 
 	if (direction1 > 0) {
 		speedPwmDutyCycle1 += thePid1;
-	} else {
-		speedPwmDutyCycle1 -= thePid1; 
+		} else {
+		speedPwmDutyCycle1 -= thePid1;
 	}
 
 	if (direction2 > 0) {
 		speedPwmDutyCycle2 += thePid2;
-	} else {
+		} else {
 		speedPwmDutyCycle2 -= thePid2;
 	}
-	
+		
 	int m1Signal = constrain(speedPwmDutyCycle1, 0, 255);
 	int m2Signal = constrain(speedPwmDutyCycle2, 0, 255);
 
 	analogWrite(M1_PWM_PIN, m1Signal);
 	analogWrite(M2_PWM_PIN, m2Signal);
-	
-	
+		
+		
 	#ifdef DEBUG_PID
 	Serial.print("Not smoothed actual 1/2 RPM: ");
 	Serial.print(realRpm1);
@@ -135,14 +141,14 @@ void readSpeedAndAngle() {
 	Serial.print("PWMs: ");
 	Serial.print(speedPwmDutyCycle1);
 	Serial.print(" ");
-	Serial.println(speedPwmDutyCycle2);		
-	
+	Serial.println(speedPwmDutyCycle2);
+		
 		
 	Serial.print("Signals: ");
 	Serial.print(m1Signal);
 	Serial.print(" ");
 	Serial.println(m2Signal);
-	
+		
 
 	Serial.println("--------------");
 	#endif
@@ -253,34 +259,46 @@ void setup() {
 
 
 void loop() {
-	stepNum++;
-	
-	#ifdef DEBUG_PID
-	if (stepNum % REPORT_PERIOD == 0) {
-		Serial.print("RPM: ");
-		Serial.print(smoothedRpm1);
-		Serial.print(" ");
-		Serial.println(smoothedRpm2);
-		Serial.print("Current current: ");
-		Serial.print(analogRead(M1_CURR_PIN));
-		Serial.print(" ");
-		Serial.println(analogRead(M2_CURR_PIN));
-		Serial.print("Errors: ");
-		Serial.print(error1);
-		Serial.print(" ");
-		Serial.println(error2);
-	}
-	#endif
-	
-	if (stepNum % READ_PERIOD == 0) {
-		readSpeedAndAngle();
-	}
+	while (1==1) {
+		stepNum++;
+		
+		#ifdef DEBUG_PID
+		if (stepNum % REPORT_PERIOD == 0) {
+			Serial.print("RPM: ");
+			Serial.print(smoothedRpm1);
+			Serial.print(" ");
+			Serial.println(smoothedRpm2);
+			Serial.print("Current current: ");
+			Serial.print(analogRead(M1_CURR_PIN));
+			Serial.print(" ");
+			Serial.println(analogRead(M2_CURR_PIN));
+			Serial.print("Errors: ");
+			Serial.print(error1);
+			Serial.print(" ");
+			Serial.println(error2);
+		}
+		#endif
+		
+		if (stepNum % READ_PERIOD == 0) {
+			readSpeedAndAngle();
+		}
 
-	if (stepNum % CHECK_ENCODERS == 0) {
-		checkEncoders();
-	}
+		if (stepNum % CHECK_ENCODERS == 0) {
+			checkEncoders();
+		}
+		
+		// this seems to be wrong too
+		// the main idea is that there are two approaches:
+		//  1) calculate speed on pin change interrupts => wheel stop undetectable
+		//  2) calculate speed by polling wheels periodically (done here) => risk of missing pulses and pid update not tied to actual speed change
+		// Here I use second approach, but first one is potentially better
+		
+		if (stepNum % UPDATE_WHEELS == 0) {
+			updateWheels();
+		}
 
-	if (stepNum % RESET_PERIOD == 0) {
-		stepNum = 0;
+		if (stepNum % RESET_PERIOD == 0) {
+			stepNum = 0;
+		}
 	}
 }
