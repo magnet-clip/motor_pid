@@ -1,3 +1,4 @@
+#include "m_motor_controller.h"
 #include "m_dc_motor.h"
 #include "m_pot_reader.h"
 #include "m_pid.h"
@@ -76,10 +77,10 @@ void setup() {
 }
 
 void loop() {
-	speedReader.update();
-	angleReader.update();
-	m1CurrentReader.update();
-	m2CurrentReader.update();
+	speedReader.execute();
+	angleReader.execute();
+	m1CurrentReader.execute();
+	m2CurrentReader.execute();
 }
 
 void onEncoder1() {

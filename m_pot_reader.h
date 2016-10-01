@@ -28,11 +28,7 @@ public:
 		pinMode(pin, INPUT);
 	}
 	
-	virtual void update() {
-		lastVal = smoothedVal;
-		float v = (float)analogRead(pin);
-		smoothedVal = alpha*v + (1-alpha)*lastVal;		
-	}
+
 	
 	float realValue() {
 		return lastVal;
@@ -40,6 +36,13 @@ public:
 	
 	float smoothedValue() {
 		return smoothedVal;
+	}
+	
+protected:
+	virtual void update(unsigned long dt) {
+		lastVal = smoothedVal;
+		float v = (float)analogRead(pin);
+		smoothedVal = alpha*v + (1-alpha)*lastVal;
 	}
 };
 

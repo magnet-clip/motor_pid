@@ -13,27 +13,32 @@ static unsigned int task_id_counter = 0;
 
 class MTask {
 private:
-	unsigned long _period;
-	unsigned long _prev;
-	unsigned int _task_id;
+	unsigned long period;
+	unsigned int task_id;
+	unsigned long prev;
 public:
-	MTask(unsigned long period) : _period(period), _prev(0UL) {
-		_task_id = task_id_counter++;
+	MTask(unsigned long period) {
+		this->period = period;
+		task_id = task_id_counter++;
+		prev = 0;
 	}
 		
 	virtual void init() = 0;
-	virtual void update() = 0;
 	
 	void execute() {
 		auto curr = millis();
-		if (curr - _prev < _period) return;
-		update();
-		_prev = curr;
+		unsigned long dt = curr - prev;
+		if (curr - prev < period) return;
+		update(dt);
+		prev = curr;
 	}
 	
 	unsigned int getId() {
-		return _task_id;
+		return task_id;
 	}
+protected:
+	virtual void update(unsigned long dt) = 0;
+
 };
 
 #endif

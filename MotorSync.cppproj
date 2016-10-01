@@ -207,6 +207,18 @@
     <Folder Include="__vm\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="m_dc_motor.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_dc_motor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_motor_controller.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_motor_controller.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="m_pid.cpp">
       <SubType>compile</SubType>
     </Compile>
