@@ -26,6 +26,9 @@ private:
 	MEwma<10> rpmSmoother;
 	unsigned int MAX_RPM;
 	
+	float realRpms, smoothedRpms, lastPid, desiredRpms, signal;
+	byte pwmSpeed;
+	
 public:
 	MMotorController(unsigned long period, unsigned int MAX_RPM, MDcMotor* motor, MClickCounter* counter, MPid* pid, MPotReader* speed) : MTask(period), adcSmoother(0.0), rpmSmoother(0.0) {
 		this->motor = motor;
@@ -36,6 +39,30 @@ public:
 	}
 	
 	virtual void init() {
+	}
+	
+	float getRealRpms() {
+		return realRpms;
+	}
+	
+	float getSmoothedRpms() {
+		return smoothedRpms;
+	}
+	
+	float getDesiredRpms() {
+		return desiredRpms;
+	}
+	
+	float getLastPid() {
+		return lastPid;
+	}
+	
+	float getLastPidAdj() {
+		return signal;
+	}
+	
+	byte getLastPwm() {
+		return pwmSpeed;
 	}
 	
 private:
@@ -54,24 +81,25 @@ protected:
 		
 		unsigned int desiredSpeedInAdcValue = speed->get();							// desired speed as told by pot
 		float smoothedSpeedInAdcValue = adcSmoother.smooth(desiredSpeedInAdcValue);  // smoothed pot value (from 0 to 1024)
-		float desiredSpeedInRpms = adcToRpms(smoothedSpeedInAdcValue);				// now it's a value from 0 to 100
+		desiredRpms = adcToRpms(smoothedSpeedInAdcValue);				// now it's a value from 0 to 100
 		
-		float currentSpeedInRpms = clicksToRpms(clicks, dt);
-		float smoothedSpeedInRpms = rpmSmoother.smooth(currentSpeedInRpms);
+		realRpms = clicksToRpms(clicks, dt);
+		smoothedRpms = rpmSmoother.smooth(realRpms);
 		
-		float signal = pid->calculate(desiredSpeedInRpms, smoothedSpeedInRpms); // some value to be converted to PWM
+		lastPid = pid->calculate(desiredRpms, smoothedRpms); // some value to be converted to PWM
 		
 		// pid value is based on adc scale (0-1024)
 		// yet it might be either positive or negative
 		
-		if (signal < 0) {
+		signal = lastPid;
+		if (lastPid < 0) {
 			motor->reardrive();
-			signal = -signal;
-		}
+			signal = -lastPid;
+		} 
 		
 		signal = constrain(signal, 0, 1024);
 		
-		byte pwmSpeed = round(signal/4); //round(signal) >> 2;
+		pwmSpeed = round(signal/4); //round(signal) >> 2;
 		motor->setSpeed(pwmSpeed);
 	}
 };

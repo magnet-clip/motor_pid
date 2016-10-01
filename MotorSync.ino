@@ -81,6 +81,10 @@ void setup() {
 	controller2.init();
 
 	reporter.init();
+	
+	#ifndef DEBUG_PID
+	reporter.disable();
+	#endif
 }
 
 void loop() {
