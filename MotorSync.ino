@@ -37,6 +37,8 @@
 #define KI 0.0
 #define KD 0.0
 
+#define DEBUG_PID
+
 volatile unsigned long clicks1;
 volatile unsigned long clicks2;
 
@@ -95,6 +97,8 @@ void loop() {
 	
 	controller1.execute();
 	controller2.execute();
+	
+	reporter.execute();
 }
 
 void onEncoder1() {
