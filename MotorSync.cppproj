@@ -207,6 +207,24 @@
     <Folder Include="__vm\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="m_pid.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_pid.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_pot_reader.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_pot_reader.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_task.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_task.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="__vm\.MotorSync.vsarduino.h">
       <SubType>compile</SubType>
     </Compile>
