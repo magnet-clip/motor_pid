@@ -1,3 +1,6 @@
+#include "m_ewma.h"
+#include "m_smoother.h"
+#include "m_click_counter.h"
 #include "m_motor_controller.h"
 #include "m_dc_motor.h"
 #include "m_pot_reader.h"
@@ -37,17 +40,22 @@
 volatile unsigned long clicks1;
 volatile unsigned long clicks2;
 
-MPotReader<10> speedReader(SPEED_PIN, READ_PERIOD);
-MPotReader<10> angleReader(ANGLE_PIN, READ_PERIOD);
-
-MPotReader<1> m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
-MPotReader<1> m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
+MPotReader speedReader(SPEED_PIN, READ_PERIOD);
+MPotReader angleReader(ANGLE_PIN, READ_PERIOD);
+MPotReader m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
+MPotReader m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
 
 MPid wheel1Pid(KP, KI, KD, 255, 100);
 MPid wheel2Pid(KP, KI, KD,255, 100);
 
 MDcMotor motor1(M1_PIN1, M1_PIN2, M1_PWM_PIN);
 MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);
+
+MClickCounter counter1;
+MClickCounter counter2;
+
+MMotorController<18000> controller1(UPDATE_PID, &motor1, &counter1, &wheel1Pid, &speedReader);
+MMotorController<18000> controller2(UPDATE_PID, &motor2, &counter2, &wheel2Pid, &speedReader);
 
 void setup() {
 	speedReader.init();
@@ -69,6 +77,9 @@ void setup() {
 
 	pinMode(ENC_2_PIN, INPUT);
 	attachInterrupt(digitalPinToInterrupt(ENC_2_PIN), onEncoder2, RISING);
+	
+	controller1.init();
+	controller2.init();
 
 	Serial.begin(57600);
 	#ifdef DEBUG_PID
@@ -81,12 +92,15 @@ void loop() {
 	angleReader.execute();
 	m1CurrentReader.execute();
 	m2CurrentReader.execute();
+	
+	controller1.execute();
+	controller2.execute();
 }
 
 void onEncoder1() {
-	clicks1++;
+	counter1.increment();
 }
 
 void onEncoder2() {
-	clicks2++;
+	counter2.increment();
 }

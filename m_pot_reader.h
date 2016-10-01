@@ -11,38 +11,28 @@
 	#include "WProgram.h"
 #endif
 
-template<int N> class MPotReader : public MTask {
+class MPotReader : public MTask {
 private:
 	byte pin;
-	float alpha;
-	
-	float lastVal, smoothedVal;
+	unsigned int adcValue;
 	
 public:
 	MPotReader(byte pin, unsigned long period): MTask(period) {
 		this->pin = pin;
-		this->alpha = 2.0/(N+1);
 	}
 	
 	virtual void init() {
 		pinMode(pin, INPUT);
 	}
 	
-
-	
-	float realValue() {
-		return lastVal;
+	unsigned int get() {
+		return adcValue;
 	}
 	
-	float smoothedValue() {
-		return smoothedVal;
-	}
 	
 protected:
 	virtual void update(unsigned long dt) {
-		lastVal = smoothedVal;
-		float v = (float)analogRead(pin);
-		smoothedVal = alpha*v + (1-alpha)*lastVal;
+		adcValue = analogRead(pin);
 	}
 };
 
