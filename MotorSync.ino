@@ -1,3 +1,4 @@
+#include "m_reporter.h"
 #include "m_ewma.h"
 #include "m_smoother.h"
 #include "m_click_counter.h"
@@ -24,8 +25,7 @@
 #define M1_CURR_PIN A2
 #define M2_CURR_PIN A3
 
-#define LED1_PIN 12
-#define LED2_PIN 13
+#define MAX_RPM 18000
 
 // Task periodicity
 #define READ_PERIOD 100
@@ -46,7 +46,7 @@ MPotReader m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
 MPotReader m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
 
 MPid wheel1Pid(KP, KI, KD, 255, 100);
-MPid wheel2Pid(KP, KI, KD,255, 100);
+MPid wheel2Pid(KP, KI, KD, 255, 100);
 
 MDcMotor motor1(M1_PIN1, M1_PIN2, M1_PWM_PIN);
 MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);
@@ -54,8 +54,10 @@ MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);
 MClickCounter counter1;
 MClickCounter counter2;
 
-MMotorController<18000> controller1(UPDATE_PID, &motor1, &counter1, &wheel1Pid, &speedReader);
-MMotorController<18000> controller2(UPDATE_PID, &motor2, &counter2, &wheel2Pid, &speedReader);
+MMotorController controller1(UPDATE_PID, MAX_RPM, &motor1, &counter1, &wheel1Pid, &speedReader);
+MMotorController controller2(UPDATE_PID, MAX_RPM, &motor2, &counter2, &wheel2Pid, &speedReader);
+
+MReporter reporter(REPORT_PERIOD, &controller1, &controller2);
 
 void setup() {
 	speedReader.init();
@@ -63,9 +65,6 @@ void setup() {
 	m1CurrentReader.init();
 	m2CurrentReader.init();	
 	
-	pinMode(LED1_PIN, OUTPUT);
-	pinMode(LED2_PIN, OUTPUT);
-
 	motor1.init();
 	motor1.forward();
 
@@ -81,10 +80,7 @@ void setup() {
 	controller1.init();
 	controller2.init();
 
-	Serial.begin(57600);
-	#ifdef DEBUG_PID
-	Serial.println("===============");
-	#endif
+	reporter.init();
 }
 
 void loop() {

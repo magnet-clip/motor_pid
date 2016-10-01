@@ -207,10 +207,22 @@
     <Folder Include="__vm\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="m_click_counter.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_click_counter.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="m_dc_motor.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="m_dc_motor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_ewma.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_ewma.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="m_motor_controller.cpp">
@@ -229,6 +241,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="m_pot_reader.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_reporter.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_reporter.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_smoother.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="m_smoother.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="m_task.cpp">

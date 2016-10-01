@@ -16,6 +16,8 @@ private:
 	unsigned long period;
 	unsigned int task_id;
 	unsigned long prev;
+	bool disabled = false;
+
 public:
 	MTask(unsigned long period) {
 		this->period = period;
@@ -25,12 +27,25 @@ public:
 		
 	virtual void init() = 0;
 	
+	void enable() {
+		disabled = false;
+	}
+	
+	void disable() {
+		disabled = true;
+	}
+
+	
+	bool enabled() {
+		return !disabled;
+	}
+	
 	void execute() {
 		auto curr = millis();
 		unsigned long dt = curr - prev;
-		if (curr - prev < period) return;
+		if (curr - prev < period || disabled) return;
 		update(dt);
-		prev = curr;
+		prev = curr; 
 	}
 	
 	unsigned int getId() {
