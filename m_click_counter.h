@@ -11,7 +11,7 @@
 
 class MClickCounter {
 private:
-	unsigned long count = 0;
+	volatile unsigned long count = 0;
 	
 public:
 	void increment();

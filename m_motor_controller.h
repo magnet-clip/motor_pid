@@ -71,13 +71,13 @@ private:
 	}
 	
 	float adcToRpms(unsigned long adcValue) {
-		return  adcValue * MAX_RPM / 1024.0;
+		return adcValue * MAX_RPM / 1024.0;
 	}
 	
 	
 protected:
 	virtual void update(unsigned long dt) {
-		unsigned long clicks = counter->getAndReset();			// number of clicks since last check
+		unsigned long clicks = counter->get();			// number of clicks since last check
 		
 		unsigned int desiredSpeedInAdcValue = speed->get();							// desired speed as told by pot
 		float smoothedSpeedInAdcValue = adcSmoother.smooth(desiredSpeedInAdcValue);  // smoothed pot value (from 0 to 1024)

@@ -22,9 +22,9 @@ void MClickCounter::reset()
 
 unsigned long MClickCounter::getAndReset()
 {
-	noInterrupts();
+	//noInterrupts();
 	unsigned long res = get();
 	reset();
-	interrupts();
+	//interrupts();
 	return res;
 }

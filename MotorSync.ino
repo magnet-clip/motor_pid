@@ -11,8 +11,8 @@
 #define SPEED_PIN A4
 #define ANGLE_PIN A1
 
-#define ENC_1_PIN 10
-#define ENC_2_PIN 11
+#define ENC_1_PIN 2
+#define ENC_2_PIN 3
 
 #define M1_PWM_PIN 5
 #define M2_PWM_PIN 6
@@ -39,72 +39,86 @@
 
 #define DEBUG_PID
 
-volatile unsigned long clicks1;
-volatile unsigned long clicks2;
-
-MPotReader speedReader(SPEED_PIN, READ_PERIOD);
-MPotReader angleReader(ANGLE_PIN, READ_PERIOD);
-MPotReader m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
-MPotReader m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
-
-MPid wheel1Pid(KP, KI, KD, 1024, 1024);
-MPid wheel2Pid(KP, KI, KD, 1024, 1024);
-
-MDcMotor motor1(M1_PIN1, M1_PIN2, M1_PWM_PIN);
-MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);
-
-MClickCounter counter1;
-MClickCounter counter2;
-
-MMotorController controller1(UPDATE_PID, MAX_RPM, &motor1, &counter1, &wheel1Pid, &speedReader);
-MMotorController controller2(UPDATE_PID, MAX_RPM, &motor2, &counter2, &wheel2Pid, &speedReader);
-
-MReporter reporter(REPORT_PERIOD, &controller1, &controller2);
+//MPotReader speedReader(SPEED_PIN, READ_PERIOD);
+//MPotReader angleReader(ANGLE_PIN, READ_PERIOD);
+//MPotReader m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
+//MPotReader m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
+//
+//MPid wheel1Pid(KP, KI, KD, 1024, 1024);
+//MPid wheel2Pid(KP, KI, KD, 1024, 1024);
+//
+//MDcMotor motor1(M1_PIN1, M1_PIN2, M1_PWM_PIN);
+//MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);
+//
+//MClickCounter counter1;
+//MClickCounter counter2;
+//
+//MMotorController controller1(UPDATE_PID, MAX_RPM, &motor1, &counter1, &wheel1Pid, &speedReader);
+//MMotorController controller2(UPDATE_PID, MAX_RPM, &motor2, &counter2, &wheel2Pid, &speedReader);
+//
+//MReporter reporter(REPORT_PERIOD, &controller1, &controller2);
 
 void setup() {
-	speedReader.init();
-	angleReader.init();
-	m1CurrentReader.init();
-	m2CurrentReader.init();	
-	
-	motor1.init();
-	motor1.forward();
+	//speedReader.init();
+	//angleReader.init();
+	//m1CurrentReader.init();
+	//m2CurrentReader.init();	
+	//
+	//motor1.init();
+	//motor1.forward();
+//
+	//motor2.init();
+	//motor2.forward();
+		//
+	//
+	//controller1.init();
+	//controller2.init();
+//
+	//reporter.init();
+	//
+	//#ifndef DEBUG_PID
+	//reporter.disable();
+	//#endif
 
-	motor2.init();
-	motor2.forward();
-		
 	pinMode(ENC_1_PIN, INPUT);
-	attachInterrupt(digitalPinToInterrupt(ENC_1_PIN), onEncoder1, RISING);
+	attachInterrupt(digitalPinToInterrupt(ENC_1_PIN), onEncoder1, CHANGE);
 
 	pinMode(ENC_2_PIN, INPUT);
-	attachInterrupt(digitalPinToInterrupt(ENC_2_PIN), onEncoder2, RISING);
-	
-	controller1.init();
-	controller2.init();
-
-	reporter.init();
-	
-	#ifndef DEBUG_PID
-	reporter.disable();
-	#endif
+	attachInterrupt(digitalPinToInterrupt(ENC_2_PIN), onEncoder2, CHANGE);
 }
 
+unsigned long c = 0;
+
+volatile unsigned long count1 = 0;
+volatile unsigned long count2 = 0;
+
 void loop() {
-	speedReader.execute();
-	angleReader.execute();
-	m1CurrentReader.execute();
-	m2CurrentReader.execute();
-	
-	controller1.execute();
-	controller2.execute();
-	
-	reporter.execute();
+	//speedReader.execute();
+	//angleReader.execute();
+	//m1CurrentReader.execute();
+	//m2CurrentReader.execute();
+	//
+	//controller1.execute();
+	//controller2.execute();
+	//
+	//reporter.execute();
+	//
+	if (c++ == 100000) {
+		Serial.print("--------------------");
+		Serial.print(count1);
+		Serial.print(" ");
+		Serial.print(count2);
+		Serial.println("--------------------");
+		c = 0;	
+	}
 }
 
 void onEncoder1() {
-	counter1.increment();
+	count1++;
+	//counter1.increment();
 }
 
 void onEncoder2() {
-	counter2.increment();
+	count2++;
+	//counter2.increment();
 }
