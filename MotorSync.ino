@@ -47,8 +47,8 @@ MPotReader angleReader(ANGLE_PIN, READ_PERIOD);
 MPotReader m1CurrentReader(M1_CURR_PIN, READ_PERIOD);
 MPotReader m2CurrentReader(M2_CURR_PIN, READ_PERIOD);
 
-MPid wheel1Pid(KP, KI, KD, 255, 100);
-MPid wheel2Pid(KP, KI, KD, 255, 100);
+MPid wheel1Pid(KP, KI, KD, 1024, 1024);
+MPid wheel2Pid(KP, KI, KD, 1024, 1024);
 
 MDcMotor motor1(M1_PIN1, M1_PIN2, M1_PWM_PIN);
 MDcMotor motor2(M2_PIN1, M2_PIN2, M2_PWM_PIN);

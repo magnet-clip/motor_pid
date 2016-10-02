@@ -12,27 +12,14 @@
 class MClickCounter {
 private:
 	unsigned long count = 0;
+	
 public:
-	void increment() {
-		count += 1;
-	}
-	
-	unsigned long get() {
-		return count;
-	}
-	
-	void reset() {
-		count = 0;
-	}
+	void increment();
+	unsigned long get();
+	void reset();
 	
 	// Interrupts-safe version of click count reader
-	unsigned long getAndReset() {
-		noInterrupts();
-		unsigned long res = get();
-		reset();
-		interrupts();
-		return res;
-	}
+	unsigned long getAndReset();
 };
 
 #endif

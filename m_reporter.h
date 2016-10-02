@@ -23,7 +23,7 @@ public:
 	}
 
 	virtual void init() {
-		Serial.begin(57600);
+		Serial.begin(115200);
 	}
 	
 	virtual void update(unsigned long dt) {

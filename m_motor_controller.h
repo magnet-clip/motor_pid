@@ -26,7 +26,7 @@ private:
 	MEwma<10> rpmSmoother;
 	unsigned int MAX_RPM;
 	
-	float realRpms, smoothedRpms, lastPid, desiredRpms, signal;
+	float realRpms, smoothedRpms, lastPid, desiredRpms, lastPidAdj;
 	byte pwmSpeed;
 	
 public:
@@ -58,7 +58,7 @@ public:
 	}
 	
 	float getLastPidAdj() {
-		return signal;
+		return lastPidAdj;
 	}
 	
 	byte getLastPwm() {
@@ -91,15 +91,15 @@ protected:
 		// pid value is based on adc scale (0-1024)
 		// yet it might be either positive or negative
 		
-		signal = lastPid;
+		lastPidAdj = lastPid;
 		if (lastPid < 0) {
 			motor->reardrive();
-			signal = -lastPid;
+			lastPidAdj = -lastPid;
 		} 
 		
-		signal = constrain(signal, 0, 1024);
+		lastPidAdj = constrain(lastPidAdj, 0, 1023);
 		
-		pwmSpeed = round(signal/4); //round(signal) >> 2;
+		pwmSpeed = lastPidAdj/4.0;
 		motor->setSpeed(pwmSpeed);
 	}
 };

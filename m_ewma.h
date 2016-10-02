@@ -14,21 +14,29 @@ template<byte N>
 class MEwma : public MSmoother {
 private:
 	float alpha;
-	float lastVal, smoothedVal;
+	float lastValue, smoothedValue;
 	
 public:
-	MEwma(float initVal = 0.0) {
-		lastVal = initVal;
-		smoothedVal = initVal;
-		alpha = 2.0/(N+1);	
-	}
-	
-	virtual float smooth(float nextValue) {
-		lastVal = smoothedVal;
-		smoothedVal = alpha*nextValue + (1-alpha)*lastVal;
-		return smoothedVal;
-	}
+	MEwma(float initVal = 0.0);
+	virtual float smooth(float nextValue);
 };
+
+template<byte N>
+MEwma<N>::MEwma(float initVal /*= 0.0*/)
+{
+	lastValue = initVal;
+	smoothedValue = initVal;
+	alpha = 2.0/(N+1);
+}
+
+
+template<byte N>
+float MEwma<N>::smooth(float newValue)
+{
+	lastValue = smoothedValue;
+	smoothedValue = alpha*newValue + (1-alpha)*lastValue;
+	return smoothedValue;
+}
 
 #endif
 
