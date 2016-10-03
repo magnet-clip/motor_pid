@@ -9,7 +9,6 @@
 	#include "WProgram.h"
 #endif
 
-static unsigned int task_id_counter = 0;
 
 class MTask {
 private:
@@ -19,38 +18,17 @@ private:
 	bool disabled = false;
 
 public:
-	MTask(unsigned long period) {
-		this->period = period;
-		task_id = task_id_counter++;
-		prev = 0;
-	}
+	MTask(unsigned long period);
 		
 	virtual void init() = 0;
 	
-	void enable() {
-		disabled = false;
-	}
+	void enable();
+	void disable();
+	bool enabled();
 	
-	void disable() {
-		disabled = true;
-	}
-
+	void execute();
 	
-	bool enabled() {
-		return !disabled;
-	}
-	
-	void execute() {
-		auto curr = millis();
-		unsigned long dt = curr - prev;
-		if (curr - prev < period || disabled) return;
-		update(dt);
-		prev = curr; 
-	}
-	
-	unsigned int getId() {
-		return task_id;
-	}
+	unsigned int getId();
 protected:
 	virtual void update(unsigned long dt) = 0;
 
