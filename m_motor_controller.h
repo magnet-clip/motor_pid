@@ -25,12 +25,13 @@ private:
 	MEwma<10> adcSmoother;
 	MEwma<10> rpmSmoother;
 	unsigned int MAX_RPM;
+	byte ENCODER_LINES;
 	
 	float realRpms, smoothedRpms, lastPid, desiredRpms, lastPidAdj;
 	byte pwmSpeed;
 	
 public:
-	MMotorController(unsigned long period, unsigned int MAX_RPM, MDcMotor* motor, MClickCounter* counter, MPid* pid, MPotReader* speed);
+	MMotorController(unsigned long period, unsigned int MAX_RPM, byte ENCODER_LINES, MDcMotor* motor, MClickCounter* counter, MPid* pid, MPotReader* speed);
 	
 	virtual void init() {
 	}
@@ -67,6 +68,7 @@ private:
 	
 protected:
 	virtual void update(unsigned long dt);
+public:
 };
 
 #endif

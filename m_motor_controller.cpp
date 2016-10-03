@@ -4,18 +4,19 @@
 
 #include "m_motor_controller.h"
 
- MMotorController::MMotorController(unsigned long period, unsigned int MAX_RPM, MDcMotor* motor, MClickCounter* counter, MPid* pid, MPotReader* speed) : MTask(period), adcSmoother(0.0), rpmSmoother(0.0)
+ MMotorController::MMotorController(unsigned long period, unsigned int MAX_RPM, byte ENCODER_LINES, MDcMotor* motor, MClickCounter* counter, MPid* pid, MPotReader* speed) : MTask(period), adcSmoother(0.0), rpmSmoother(0.0)
 {
 	this->motor = motor;
 	this->counter = counter;
 	this->pid = pid;
 	this->speed = speed;
 	this->MAX_RPM = MAX_RPM;
+	this->ENCODER_LINES = ENCODER_LINES;
 }
 
 float MMotorController::clicksToRpms(unsigned long clicks, unsigned long dt)
 {
-	return 0.0; // TODO!!!
+	return clicks*(60000.0/(ENCODER_LINES*dt));
 }
 
 float MMotorController::adcToRpms(unsigned long adcValue)
@@ -36,7 +37,7 @@ void MMotorController::update(unsigned long dt)
 	
 	lastPid = pid->calculate(desiredRpms, smoothedRpms); // some value to be converted to PWM
 	
-	// pid value is based on adc scale (0-1024)
+	// pid value is based on ADC scale (0-1024)
 	// yet it might be either positive or negative
 	
 	lastPidAdj = lastPid;
