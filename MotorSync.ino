@@ -11,8 +11,8 @@
 #define SPEED_PIN A4
 #define ANGLE_PIN A1
 
-#define ENC_1_PIN 2
-#define ENC_2_PIN 3
+#define ENC_1_PIN 3
+#define ENC_2_PIN 2
 
 #define M1_PWM_PIN 5
 #define M2_PWM_PIN 6
@@ -34,7 +34,7 @@
 #define REPORT_PERIOD 2000
 
 // PID params
-#define KP 5
+#define KP 10
 #define KI 0.0
 #define KD 0.0
 

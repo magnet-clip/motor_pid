@@ -27,7 +27,7 @@ void MReporter::update(unsigned long dt)
 	Serial.print("Smoothed actual 1/2 & desired RPM: ");
 	Serial.print(c1->getSmoothedRpms());
 	Serial.print("/");
-	Serial.print(c1->getSmoothedRpms());
+	Serial.print(c2->getSmoothedRpms());
 	Serial.print(" & ");
 	Serial.println(c1->getDesiredRpms());
 	
