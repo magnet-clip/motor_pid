@@ -2,12 +2,12 @@
 ## Project still in development
 Two motors rotation speed control using PID regulator on Arduino
 
-PID Settings:
-1. Small overshoot over long rail-to-rail move, small oscillations in the middle positions:
-Motor is connected to E and +2 terminals. There also is a +1 terminal which seems to correspond to slower winding    
-    
-    
+    PID Settings:
 
+1. Small overshoot over long rail-to-rail move, small oscillations in the middle positions:
+    Motor is connected to E and +2 terminals. There also is a +1 terminal which seems to correspond to slower winding    
+
+```c++    
     #define KP 1
     #define KI 0.01 
     #define KD 0.25
@@ -35,6 +35,6 @@ Motor is connected to E and +2 terminals. There also is a +1 terminal which seem
     // that to avoid overshoot which will result in motor trying to rotate further then it is possible and break steering
     #define MIN_DESIRED 0     
     #define MAX_DESIRED 1023  
-
+```
 
 There seems to be some non-linearity in my pots, so their relative rotation seems to be out of sync. Maybe i have to make a mapping. And then maybe FRD/RWD coeffs will be obsolete
