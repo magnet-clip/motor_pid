@@ -4,7 +4,9 @@ Two motors rotation speed control using PID regulator on Arduino
 
 PID Settings:
 1. Small overshoot over long rail-to-rail move, small oscillations in the middle positions:
-
+Motor is connected to E and +2 terminals. There also is a +1 terminal which seems to correspond to slower winding    
+    
+    
 
     #define KP 1
     #define KI 0.01 
